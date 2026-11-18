@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vortex — Fast, private, and yours</title>
+  <meta name="description" content="A minimal, tabbed web browser built with Electron. Bookmarks, history, downloads, ad blocker, and more." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <nav class="nav">
+    <div class="container nav-inner">
+      <div class="brand">
+        <span class="brand-icon">🌐</span>
+        <span class="brand-name">Vortex</span>
+      </div>
+      <div class="nav-links">
+        <a href="#features">Features</a>
+        <a href="#screenshots">Screenshots</a>
+        <a href="#download">Download</a>
+        <a href="https://github.com" target="_blank" rel="noopener">GitHub</a>
+      </div>
+      <a href="#download" class="btn btn-primary small">Get started</a>
+    </div>
+  </nav>
+
+  <header class="hero">
+    <div class="container hero-inner">
+      <div class="hero-text">
+        <span class="badge">Open source · Electron</span>
+        <h1>The browser that puts <span class="grad">you</span> first.</h1>
+        <p class="lead">Fast, minimal, and fully yours. Tabs, bookmarks, history, downloads, a built-in ad blocker, and a clean new-tab page — all in a lightweight shell you can hack on.</p>
+        <div class="hero-cta">
+          <a href="#download" class="btn btn-primary">Download for Windows</a>
+          <a href="#features" class="btn btn-ghost">Explore features</a>
+        </div>
+        <div class="hero-meta">
+          <span>⚡ Instant startup</span>
+          <span>🔒 Privacy-first</span>
+          <span>🧩 Hackable</span>
+        </div>
+      </div>
+      <div class="hero-visual">
+        <div class="browser-mock">
+          <div class="bm-bar">
+            <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+            <div class="bm-url">mybrowser.app</div>
+          </div>
+          <div class="bm-tabs">
+            <div class="bm-tab active">New Tab</div>
+            <div class="bm-tab">GitHub</div>
+            <div class="bm-tab">YouTube</div>
+          </div>
+          <div class="bm-body">
+            <div class="bm-card">
+              <div class="bm-search"></div>
+              <div class="bm-grid">
+                <div class="bm-tile"></div><div class="bm-tile"></div><div class="bm-tile"></div><div class="bm-tile"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <section id="features" class="section">
+    <div class="container">
+      <div class="section-head">
+        <h2>Everything you need, nothing you don't.</h2>
+        <p>A complete browsing experience in a clean, modern interface.</p>
+      </div>
+      <div class="features-grid">
+        <div class="feature">
+          <div class="feature-icon">🗂️</div>
+          <h3>Tabbed browsing</h3>
+          <p>Open, close, pin, mute and duplicate tabs. Reopen closed tabs with Ctrl+Shift+T.</p>
+        </div>
+        <div class="feature">
+          <div class="feature-icon">⭐</div>
+          <h3>Bookmarks</h3>
+          <p>Star pages in one click. A bookmarks bar keeps your favorites one click away.</p>
+        </div>
+        <div class="feature">
+          <div class="feature-icon">📜</div>
+          <h3>History</h3>
+          <p>Searchable history grouped by day. Clear it whenever you want.</p>
+        </div>
+        <div class="feature">
+          <div class="feature-icon">⬇️</div>
+          <h3>Downloads</h3>
+          <p>Track progress, open files or reveal them in the folder.</p>
+        </div>
+        <div class="feature">
+          <div class="feature-icon">🛡️</div>
+          <h3>Ad blocker</h3>
+          <p>Built-in tracker and ad blocking for a cleaner, faster web.</p>
+        </div>
+        <div class="feature">
+          <div class="feature-icon">🔍</div>
+          <h3>Find in page</h3>
+          <p>Search any page instantly with match highlighting and count.</p>
+        </div>
+        <div class="feature">
+          <div class="feature-icon">🎨</div>
+          <h3>Themes</h3>
+          <p>Switch between dark and light. Tweak homepage, search engine and zoom.</p>
+        </div>
+        <div class="feature">
+          <div class="feature-icon">⌨️</div>
+          <h3>Keyboard first</h3>
+          <p>Shortcuts for everything: new tab, address bar, find, history, zoom and more.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="screenshots" class="section alt">
+    <div class="container">
+      <div class="section-head">
+        <h2>See it in action.</h2>
+        <p>A clean interface that stays out of your way.</p>
+      </div>
+      <div class="shots">
+        <div class="shot">
+          <div class="shot-ph">🏠 New Tab page</div>
+        </div>
+        <div class="shot">
+          <div class="shot-ph">🗂️ Tabbed browsing</div>
+        </div>
+        <div class="shot">
+          <div class="shot-ph">⚙️ Settings panel</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="download" class="section">
+    <div class="container download-card">
+      <div>
+        <h2>Ready when you are.</h2>
+        <p>Clone the repo, run <code>npm install</code> and <code>npm start</code>. Or use the desktop shortcut.</p>
+      </div>
+      <div class="download-actions">
+        <a class="btn btn-primary" href="https://github.com/your-org/vortex-browser/releases/latest" target="_blank" rel="noopener">Download for Windows</a>
+        <a class="btn btn-ghost" href="https://github.com/your-org/vortex-browser/releases" target="_blank" rel="noopener">All releases</a>
+        <a class="btn btn-ghost" href="#build" onclick="document.getElementById('build').scrollIntoView({behavior:'smooth'});return false;">Build locally</a>
+      </div>
+      <div id="build" style="margin-top:24px;text-align:left;max-width:640px">
+        <h3 style="margin-bottom:8px">Build from source</h3>
+        <pre style="background:rgba(0,0,0,0.3);padding:12px;border-radius:8px;overflow:auto"><code>git clone https://github.com/your-org/vortex-browser.git
+cd vortex-browser
+npm install
+npm start</code></pre>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="container footer-inner">
+      <div class="brand">
+        <span class="brand-icon">🌐</span>
+        <span class="brand-name">Vortex</span>
+      </div>
+      <p>© 2026 Vortex. Built with Electron.</p>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>

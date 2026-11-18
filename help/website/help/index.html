@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'none'">
+<title>Vortex Browser — Help & Guide</title>
+<meta name="description" content="Your official Vortex Browser welcome center, interactive tutorial, and feature guide.">
+<link rel="icon" href="favicon.png"><link rel="stylesheet" href="styles.css">
+<script src="data.js" defer></script><script src="help.js" defer></script>
+</head>
+<body>
+<div class="shell">
+<aside class="sidebar" id="sidebar">
+<a class="brand" href="?page=overview"><img class="logo" src="icon.png" alt="" width="37" height="37"><span>Vortex<span class="brand-sub">BROWSER</span></span></a>
+<div class="sidebar-caption">HELP & GUIDE</div>
+<nav aria-label="Help navigation" id="navigation"></nav>
+<div class="sidebar-bottom"><span class="status-dot"></span><span>Your space. Your control.</span><div class="offline-label">Built for Vortex Browser <span>↗</span></div></div>
+</aside>
+<div class="workspace">
+<header class="topbar"><button class="icon-button mobile-menu" id="mobile-menu" aria-label="Toggle navigation">☰</button><div class="search-wrap"><span aria-hidden="true">⌕</span><input id="search" type="search" placeholder="Search the help center..." aria-label="Search the help center"><span class="search-hint">Search</span></div><span class="topbar-label"><span class="status-dot"></span> Official help center</span></header>
+<main id="content" tabindex="-1"></main>
+<footer><span>Vortex Browser <span class="footer-dot">·</span> Made for a better browsing experience.</span><a href="?page=about">About Vortex <span>↗</span></a></footer>
+</div>
+</div>
+<div id="toast" role="status" class="toast" hidden></div>
+</body>
+</html>

@@ -1,0 +1,15 @@
+{
+  "name": "my-browser",
+  "version": "0.1.0",
+  "description": "A minimal tabbed web browser built with Electron",
+  "main": "website/vortex-entry.cjs",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron ."
+  },
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^33.0.0"
+  }
+}
