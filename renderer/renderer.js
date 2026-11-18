@@ -85,6 +85,7 @@ let suggestionItems = [];
 let cpIndex = 0;
 let cpItems = [];
 let panelVersion = 0;
+let adminDevEnabled = false;
 
 const permissionQueue = [];
 let activePermission = null;
@@ -2032,7 +2033,7 @@ function commands() {
     ["Zoom out", () => setZoom(-0.1)],
     ["Reset zoom", () => setZoom(0, true)],
     ["Clear browsing data", clearBrowsingData],
-    ["Open admin panel", openAdminPanel]
+    ...(adminDevEnabled ? [["Open admin panel", openAdminPanel]] : [])
   ];
 }
 
@@ -2119,6 +2120,7 @@ function runPalette(index) {
 }
 
 function openAdminPanel() {
+  if (!adminDevEnabled) return;
   $("admin-status").textContent = "Ready.";
   $("admin-panel").showModal();
 }
@@ -2426,6 +2428,7 @@ if (window.browserAPI?.onCloseHelpTab) {
     if (tab && tab.url && tab.url.includes('help/index.html')) closeTab(tab.id);
   });
 }
+window.browserAPI?.isDev().then(info => { adminDevEnabled = Boolean(info && info.dev); }).catch(() => { adminDevEnabled = false; });
 
 /* ---------- Tab hover previews ---------- */
 

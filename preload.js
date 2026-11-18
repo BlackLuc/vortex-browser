@@ -23,5 +23,6 @@ contextBridge.exposeInMainWorld('browserAPI', {
   respondPermission: (id, allowed) => ipcRenderer.send('permission-response', id, allowed),
   getPermissions: () => ipcRenderer.invoke('get-permissions'),
   setPermission: (origin, permission, allowed) => ipcRenderer.invoke('set-permission', origin, permission, allowed),
-  adminReleaseNow: () => ipcRenderer.invoke('vortex-admin:release-current')
+  adminReleaseNow: () => ipcRenderer.invoke('vortex-admin:release-current'),
+  isDev: () => ipcRenderer.invoke('vortex-admin:is-dev')
 });

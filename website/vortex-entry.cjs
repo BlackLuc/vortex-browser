@@ -117,6 +117,8 @@ app.whenReady().then(() => {
     return { ok: true, version: newVersion, at: new Date().toISOString() };
   });
 
+  ipcMain.handle('vortex-admin:is-dev', () => ({ dev: !app.isPackaged }));
+
   ipcMain.handle('vortex-help:open', (event, mode) => {
     if (!trustedBrowser(event)) throw new Error('Untrusted sender');
     mainWindow?.webContents.send('open-help-tab', helpTabUrl(mode === 'tutorial' ? 'tutorial' : 'help'));
