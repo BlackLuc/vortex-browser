@@ -4,7 +4,7 @@ const $ = id => document.getElementById(id);
 
 const params = new URLSearchParams(location.search);
 
-const pages = [['overview','Overview','▦'],['getting-started','Getting Started','↗'],['tutorial','Interactive Tutorial','▷'],['features','Features','◫'],['shortcuts','Keyboard Shortcuts','⌘'],['privacy','Privacy & Security','◇'],['settings','Settings','⚙'],['troubleshooting','Troubleshooting','⊙'],['faq','FAQ','?'],['about','About Vortex','ⓘ']];
+const pages = [['overview','Overview','▦'],['getting-started','Getting Started','↗'],['tutorial','Interactive Tutorial','▷'],['features','Features','◫'],['shortcuts','Keyboard Shortcuts','⌘'],['privacy','Privacy & Security','◇'],['settings','Settings','⚙'],['download','Download','⬇'],['troubleshooting','Troubleshooting','⊙'],['faq','FAQ','?'],['about','About Vortex','ⓘ']];
 
 let page = params.get('page') || 'overview';
 
@@ -52,7 +52,7 @@ function detail(title,answer,how,shortcut,status){const d=el('details','guide-de
 
 function overview(root){const hero=el('section','hero');const image=el('img','hero-art');image.src='vortex.png';image.alt='Vortex’s blue and violet glass spiral';image.width=1536;image.height=1024;hero.append(image);const copy=el('div','hero-copy');append(copy,append(el('div','eyebrow'),el('span','','✧'),el('span','',completed?'WELCOME BACK TO YOUR SPACE':'A NEW WAY TO BROWSE')),el('h1','','Welcome to\nVortex Browser'),el('p','tagline','Your internet. Your space. Your control.'),el('p','intro','Fast, focused, and made for you. Get to know your browser and make the internet feel a little more like home.'));
 
-append(copy,append(el('div','actions'),action(completed?'Restart Tutorial  →':'Start Tutorial  →',startTutorial,'primary'),completed?link('Explore features →','features','button quiet'):action('Skip for Now',()=>finish(true),'quiet')),el('p','tiny-note','7 simple steps · About 5 minutes · Go at your own pace'));append(hero,copy);root.append(hero);
+append(copy,append(el('div','actions'),action(completed?'Restart Tutorial  →':'Start Tutorial  →',startTutorial,'primary'),link('Download Vortex →','download','button quiet')),el('p','tiny-note','7 simple steps · About 5 minutes · Go at your own pace'));append(hero,copy);root.append(hero);
 
 const benefits=el('div','benefits');[['ϟ','Fast by design'],['◇','Privacy-minded'],['◐','Uniquely yours'],['◫','Built for focus']].forEach(([i,t])=>benefits.append(append(el('span'),el('b','',i),el('span','',t))));root.append(benefits);
 
@@ -99,6 +99,8 @@ else if(page==='troubleshooting'){root.append(heading('Let’s get you back on t
 else if(page==='faq'){root.append(heading('A few things you might be wondering.','Straightforward answers to your most common Vortex questions.'));faqs.forEach(([q,a])=>root.append(detail(q,a)));}
 
 else if(page==='settings')settings(root);
+
+else if(page==='download'){root.append(heading('Download Vortex Browser','Get the latest build for your platform, or build from source.'));const dActions=el('div','actions');const winLink=el('a','button primary','Download for Windows');winLink.href='https://github.com/BlackLuc/vortex-browser/releases/latest';winLink.target='_blank';const allLink=el('a','button','All releases');allLink.href='https://github.com/BlackLuc/vortex-browser/releases';allLink.target='_blank';append(dActions,winLink,allLink);root.append(dActions);const pre=el('pre','');pre.textContent='git clone https://github.com/BlackLuc/vortex-browser.git\ncd vortex-browser\nnpm install\nnpm start';root.append(pre);root.append(el('p','notice','Desktop host features (new windows, incognito, downloads file actions, permissions enforcement) require the Electron desktop build.'));}
 
 else if(page==='about'){root.append(heading('Vortex Browser','Your internet. Your space. Your control.'));const image=el('img','about-mark');image.src='vortex.png';image.alt='Vortex blue and violet spiral';root.append(image);root.append(el('p','','An independent browser experience, built around your browsing space. This is its local welcome center and permanent help guide.'));const meta=el('dl','metadata');[['Browser version',info?.version||'Available when opened in Vortex desktop'],['Build information',info?`Electron ${info.electron} · Chromium ${info.chrome}`:'Not provided by the web preview'],['Credits','Vortex Browser · Powered by Electron and Chromium'],['Help center','Offline-ready, local browser guide']].forEach(([k,v])=>append(meta,el('dt','',k),el('dd','',v)));root.append(meta);
 
