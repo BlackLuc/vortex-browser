@@ -107,10 +107,22 @@ app.whenReady().then(() => {
       const child = spawn('npx', ['electron-builder', '--win', '--x64', '--publish', 'always'], {
         cwd: projectDir,
         shell: true,
-        stdio: 'inherit',
+        stdio: ['ignore', 'pipe', 'pipe'],
         env: Object.assign({}, process.env, { GITHUB_TOKEN: process.env.GITHUB_TOKEN || process.env.GH_TOKEN || '' })
       });
-      child.on('close', code => resolve({ code }));
+      let log = '';
+      child.stdout.on('data', d => {
+        log += d.toString();
+        mainWindow?.webContents.send('vortex-admin:log', log.trim());
+      });
+      child.stderr.on('data', d => {
+        log += d.toString();
+        mainWindow?.webContents.send('vortex-admin:log', log.trim());
+      });
+      child.on('close', code => {
+        mainWindow?.webContents.send('vortex-admin:log', code === 0 ? 'Release build finished successfully.' : 'Release build failed. Exit code ' + code + '.');
+        resolve({ code });
+      });
     });
 
     if (build.code !== 0) throw new Error('Release build failed with exit code ' + build.code + '.');

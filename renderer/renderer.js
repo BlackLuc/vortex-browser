@@ -86,6 +86,7 @@ let cpIndex = 0;
 let cpItems = [];
 let panelVersion = 0;
 let adminDevEnabled = false;
+let adminLog = [];
 
 const permissionQueue = [];
 let activePermission = null;
@@ -2133,6 +2134,9 @@ async function runReleaseNow() {
   const releaseBtn = $("admin-release");
   releaseBtn.disabled = true;
   $("admin-status").textContent = "Releasing… bump + build + publish";
+  adminLog = [];
+  const logEl = $("admin-log");
+  if (logEl) logEl.textContent = "";
   try {
     const result = await window.browserAPI.adminReleaseNow();
     $("admin-status").textContent = result && result.ok
@@ -2429,6 +2433,13 @@ if (window.browserAPI?.onCloseHelpTab) {
   });
 }
 window.browserAPI?.isDev().then(info => { adminDevEnabled = Boolean(info && info.dev); }).catch(() => { adminDevEnabled = false; });
+if (window.browserAPI?.onReleaseLog) {
+  window.browserAPI.onReleaseLog(line => {
+    adminLog.push(String(line));
+    const logEl = $("admin-log");
+    if (logEl) logEl.textContent = adminLog.join("\n");
+  });
+}
 
 /* ---------- Tab hover previews ---------- */
 

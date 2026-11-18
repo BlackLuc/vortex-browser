@@ -24,5 +24,6 @@ contextBridge.exposeInMainWorld('browserAPI', {
   getPermissions: () => ipcRenderer.invoke('get-permissions'),
   setPermission: (origin, permission, allowed) => ipcRenderer.invoke('set-permission', origin, permission, allowed),
   adminReleaseNow: () => ipcRenderer.invoke('vortex-admin:release-current'),
-  isDev: () => ipcRenderer.invoke('vortex-admin:is-dev')
+  isDev: () => ipcRenderer.invoke('vortex-admin:is-dev'),
+  onReleaseLog: (cb) => ipcRenderer.on('vortex-admin:log', (_e, line) => cb(line))
 });

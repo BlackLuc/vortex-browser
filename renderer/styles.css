@@ -785,6 +785,21 @@ dialog::backdrop {
   margin-top: 20px;
 }
 
+#admin-log {
+  margin: 12px 0 0;
+  padding: 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.5;
+  max-height: 220px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
 #cp-input {
   width: 100%;
   min-height: 42px;
