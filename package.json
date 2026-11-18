@@ -1,6 +1,6 @@
 {
   "name": "my-browser",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A minimal tabbed web browser built with Electron",
   "main": "website/vortex-entry.cjs",
   "scripts": {
@@ -13,6 +13,7 @@
     "electron": "^33.0.0"
   },
   "dependencies": {
-    "@electron/packager": "^20.3.0"
+    "@electron/packager": "^20.3.0",
+    "electron-updater": "^6.8.11"
   }
 }
