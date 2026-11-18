@@ -3,6 +3,33 @@
   "version": "0.1.1",
   "description": "A minimal tabbed web browser built with Electron",
   "main": "website/vortex-entry.cjs",
+  "build": {
+    "appId": "app.vortex.browser",
+    "productName": "Vortex Browser",
+    "directories": {
+      "output": "electron-release"
+    },
+    "files": [
+      "**/*",
+      "!electron-release/**",
+      "!.git/**"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "website/icons/vortex.ico",
+      "artifactName": "Vortex-Browser-Setup-${version}.${ext}"
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": false
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "BlackLuc",
+      "repo": "vortex-browser"
+    }
+  },
   "scripts": {
     "start": "electron .",
     "dev": "electron ."
@@ -10,7 +37,8 @@
   "author": "",
   "license": "MIT",
   "devDependencies": {
-    "electron": "^33.0.0"
+    "electron": "^33.0.0",
+    "electron-builder": "^26.18.0"
   },
   "dependencies": {
     "@electron/packager": "^20.3.0",
