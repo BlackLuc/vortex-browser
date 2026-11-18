@@ -56,6 +56,11 @@ append(copy,append(el('div','actions'),action(completed?'Restart Tutorial  →':
 
 const benefits=el('div','benefits');[['ϟ','Fast by design'],['◇','Privacy-minded'],['◐','Uniquely yours'],['◫','Built for focus']].forEach(([i,t])=>benefits.append(append(el('span'),el('b','',i),el('span','',t))));root.append(benefits);
 
+const stats=el('div','benefits');stats.id='site-stats';
+stats.append(append(el('span'),el('b','','👁'),el('span','stat-visits','… visits')));
+stats.append(append(el('span'),el('b','','⬇'),el('span','stat-downloads','… downloads')));
+root.append(stats);
+
 root.append(sectionHeading('Make yourself at home','Everything you need to get more out of Vortex.','features'));
 
 append(root,append(el('div','card-grid'),guideCard('Getting Started','Your first tabs, your favorite sites, and a browser that feels like you.','↗','getting-started','','Start here'),guideCard('Explore Features','Discover the little things that make a big difference to your browsing.','◫','features','blue'),guideCard('Privacy & Security','Understand your privacy controls and browse with more confidence.','◇','privacy','green')));
@@ -146,6 +151,23 @@ $('mobile-menu').addEventListener('click',()=>{$('sidebar').classList.toggle('op
 
 window.addEventListener('popstate',()=>{page=new URLSearchParams(location.search).get('page')||'overview';render();});
 
-async function initialize(){try{completed=native?await native.isComplete():readCompletion(localStorage);if(native)info=await native.getInfo();}catch{toast('Your saved tutorial status could not be read.');}if(params.get('mode')==='tutorial')page='tutorial';if(params.get('mode')==='first-launch'&&completed)page='features';render();}
+async function loadSiteStats() {
+  try {
+    const vRes = await fetch('https://api.countapi.xyz/hit/blackluc/vortex-browser/visits');
+    const vData = await vRes.json();
+    const vEl = document.querySelector('.stat-visits');
+    if (vEl && vData && typeof vData.value === 'number') vEl.textContent = vData.value.toLocaleString() + ' visits';
+  } catch (e) {}
+  try {
+    const rRes = await fetch('https://api.github.com/repos/BlackLuc/vortex-browser/releases');
+    const releases = await rRes.json();
+    let total = 0;
+    if (Array.isArray(releases)) releases.forEach(r => (r.assets || []).forEach(a => total += (a.download_count || 0)));
+    const dEl = document.querySelector('.stat-downloads');
+    if (dEl) dEl.textContent = total.toLocaleString() + ' downloads';
+  } catch (e) {}
+}
+
+async function initialize(){try{completed=native?await native.isComplete():readCompletion(localStorage);if(native)info=await native.getInfo();}catch{toast('Your saved tutorial status could not be read.');}if(params.get('mode')==='tutorial')page='tutorial';if(params.get('mode')==='first-launch'&&completed)page='features';render();loadSiteStats();}
 
 initialize();
