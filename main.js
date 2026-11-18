@@ -18,6 +18,10 @@ const permCallbacks = new Map();
 let permCounter = 0;
 let permFile = null;
 
+let blockerEnabled = true;
+const privacyStats = { ads: 0, trackers: 0 };
+const downloadItems = new Map();
+
 const DATA_DIR = path.join(
   os.homedir(),
   'AppData',
@@ -181,6 +185,10 @@ function installAdBlocker() {
   session.defaultSession.webRequest.onBeforeRequest(
     filter,
     (details, callback) => {
+      if (!blockerEnabled) {
+        return callback({});
+      }
+
       try {
         const url = new URL(details.url);
         const hostname = url.hostname.toLowerCase();
@@ -199,6 +207,10 @@ function installAdBlocker() {
             : false;
 
         if (blockedHost || blockedPath) {
+          const isTrackerHost = /tracker|telemetry|metrics|beacon|analytics/i.test(hostname);
+          if (isTrackerHost) privacyStats.trackers += 1;
+          else privacyStats.ads += 1;
+
           return callback({ cancel: true });
         }
       } catch (error) {
@@ -370,6 +382,7 @@ function installDownloadHandler() {
       };
 
       sendToRenderer('download-started', info);
+      downloadItems.set(id, item);
 
       item.on('updated', () => {
         info.received = item.getReceivedBytes();
@@ -387,6 +400,7 @@ function installDownloadHandler() {
         info.path = item.getSavePath();
 
         sendToRenderer('download-done', { ...info });
+        downloadItems.delete(id);
       });
     }
   );
@@ -587,6 +601,110 @@ function registerIPC() {
       return savePerms(perms);
     }
   );
+
+  // Ad blocker toggle
+
+  ipcMain.handle('vortex:set-blocker', async (event, enabled) => {
+    if (!isTrustedSender(event)) return blockerEnabled;
+
+    blockerEnabled = enabled === true;
+    return blockerEnabled;
+  });
+
+  ipcMain.handle('vortex:get-privacy-stats', async (event) => {
+    if (!isTrustedSender(event)) return { ads: 0, trackers: 0 };
+
+    return { ads: privacyStats.ads, trackers: privacyStats.trackers };
+  });
+
+  // Download directory
+
+  ipcMain.handle('vortex:set-download-directory', async (event, dir) => {
+    if (!isTrustedSender(event)) return false;
+
+    if (typeof dir !== 'string' || !dir) return false;
+
+    try {
+      return await session.defaultSession.setDownloadPath(dir);
+    } catch (error) {
+      console.error('[IPC] Download dir error:', error);
+      return false;
+    }
+  });
+
+  // Download actions
+
+  ipcMain.handle('vortex:download-action', async (event, payload) => {
+    if (!isTrustedSender(event)) return false;
+
+    const id = payload && typeof payload === 'object' ? payload.id : undefined;
+    const action = payload && typeof payload === 'object' ? payload.action : undefined;
+    const item = downloadItems.get(id);
+
+    if (!item) return false;
+
+    try {
+      if (action === 'pause') { item.pause(); return true; }
+      if (action === 'resume') { item.resume(); return true; }
+      if (action === 'cancel') { item.cancel(); return true; }
+      if (action === 'open') { const p = item.getSavePath(); if (p) return await shell.openPath(p); return false; }
+      if (action === 'show') { const p = item.getSavePath(); if (p) shell.showItemInFolder(p); return true; }
+      return false;
+    } catch (error) {
+      console.error('[IPC] Download action error:', error);
+      return false;
+    }
+  });
+
+  // New window
+
+  ipcMain.handle('vortex:new-window', async (event, payload) => {
+    if (!isTrustedSender(event)) return false;
+
+    const incognito = Boolean(payload && typeof payload === 'object' && payload.incognito);
+
+    const win = new BrowserWindow({
+      width: 1360,
+      height: 860,
+      minWidth: 720,
+      minHeight: 480,
+      title: 'Vortex',
+      backgroundColor: '#1e1e1e',
+      webPreferences: {
+        preload: path.join(__dirname, 'preload.js'),
+        contextIsolation: true,
+        nodeIntegration: false,
+        webviewTag: true,
+        sandbox: false,
+        ...(incognito ? { session: session.defaultSession.createIncognitoSession() } : {})
+      }
+    });
+
+    mainWindow = win;
+
+    win.loadFile(
+      path.join(__dirname, 'renderer', 'index.html')
+    ).catch(error => {
+      console.error('[Window] Failed to load:', error);
+    });
+
+    win.webContents.on(
+      'console-message',
+      (_event, level, message) => {
+        console.log('[renderer]', message);
+      }
+    );
+
+    win.webContents.on('render-process-gone', (_event, details) => {
+      console.error('[Window] Renderer process exited:', details);
+    });
+
+    win.on('closed', () => {
+      if (mainWindow === win) mainWindow = null;
+    });
+
+    return true;
+  });
 }
 
 // --------------------------------------------------

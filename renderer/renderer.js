@@ -82,6 +82,8 @@ let sequence = 0;
 let toastTimer;
 let suggestionIndex = -1;
 let suggestionItems = [];
+let suggestionRequestId = 0;
+let suggestionDebounce;
 let cpIndex = 0;
 let cpItems = [];
 let panelVersion = 0;
@@ -221,7 +223,7 @@ function ensureActive() {
   }
 
   if (!state.activeTabId) {
-    const tab = makeTab("");
+    const tab = makeTab(state.settings.homepage || "");
     state.tabs.push(tab);
     state.activeTabId = tab.id;
   }
@@ -421,7 +423,7 @@ function makeTab(url = "") {
 }
 
 function createTab(raw = "", options = {}) {
-  const url = raw ? toUrl(raw) : "";
+  const url = raw ? toUrl(raw) : (state.settings.homepage || "");
 
   if (raw && !url) {
     toast("Enter a valid HTTP/HTTPS URL or search.");
@@ -1109,21 +1111,88 @@ function hideSuggestions() {
   suggestionIndex = -1;
 }
 
-function showSuggestions() {
-  const query = $("address").value.trim().toLowerCase();
-
-  if (!query) return hideSuggestions();
-
+function localSuggestions(query) {
+  const needle = query.toLowerCase();
   const seen = new Set();
 
-  suggestionItems = [...state.bookmarks, ...state.history]
+  const items = [...state.bookmarks, ...state.history]
     .filter(item => {
       if (seen.has(item.url)) return false;
       seen.add(item.url);
 
-      return `${item.title} ${item.url}`.toLowerCase().includes(query);
+      return `${item.title} ${item.url}`.toLowerCase().includes(needle);
     })
-    .slice(0, 7);
+    .slice(0, 7)
+    .map(item => ({ title: item.title, url: item.url }));
+
+  return items;
+}
+
+async function fetchEngineSuggestions(query) {
+  const engineKey = state.settings.searchEngine;
+  const engine = SEARCH_ENGINES[engineKey];
+
+  if (!engine) return [];
+
+  if (engineKey === "custom") return [];
+
+  try {
+    let suggestions = [];
+
+    if (engineKey === "google") {
+      const url = `https://suggestqueries.google.com/complete/search?client=firefox&q=${encodeURIComponent(query)}`;
+      const response = await fetch(url);
+      const data = await response.json();
+
+      if (Array.isArray(data) && Array.isArray(data[1])) suggestions = data[1];
+    } else if (engineKey === "bing") {
+      const url = `https://api.bing.com/osjson.aspx?q=${encodeURIComponent(query)}&count=8`;
+      const response = await fetch(url);
+      const data = await response.json();
+
+      if (data && Array.isArray(data.webPages?.value)) {
+        suggestions = data.webPages.value.map(item => item.name).filter(Boolean);
+      }
+    } else if (engineKey === "duckduckgo") {
+      const url = `https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json`;
+      const response = await fetch(url);
+      const data = await response.json();
+
+      const topics = Array.isArray(data?.RelatedTopics) ? data.RelatedTopics : [];
+      suggestions = topics
+        .map(topic => (typeof topic === "object" ? topic.Text || topic.Name || "" : String(topic || "")))
+        .filter(Boolean)
+        .slice(0, 8);
+    }
+
+    return suggestions
+      .map(title => String(title).trim())
+      .filter(title => title.length > 0)
+      .slice(0, 8);
+  } catch {
+    return [];
+  }
+}
+
+async function showSuggestions() {
+  const query = String($("address").value || "").trim();
+
+  if (!query) return hideSuggestions();
+
+  const requestId = ++suggestionRequestId;
+  const engineSuggestions = await fetchEngineSuggestions(query);
+
+  if (requestId !== suggestionRequestId) return;
+
+  if (engineSuggestions.length) {
+    suggestionItems = engineSuggestions.map((title, index) => ({
+      id: `engine-${index}`,
+      title,
+      url: (SEARCH_ENGINES[state.settings.searchEngine] || SEARCH_ENGINES.google) + encodeURIComponent(title)
+    }));
+  } else {
+    suggestionItems = localSuggestions(query);
+  }
 
   suggestionIndex = -1;
   drawSuggestions();
@@ -2208,7 +2277,10 @@ $("ws-select").addEventListener("change", event => {
 });
 
 $("address").addEventListener("focus", () => $("address").select());
-$("address").addEventListener("input", showSuggestions);
+$("address").addEventListener("input", () => {
+  clearTimeout(suggestionDebounce);
+  suggestionDebounce = setTimeout(() => showSuggestions(), 150);
+});
 
 $("address").addEventListener("keydown", event => {
   if (event.key === "Enter") {
