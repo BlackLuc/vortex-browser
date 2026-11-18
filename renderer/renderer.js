@@ -438,6 +438,8 @@ function switchTab(tabId) {
   window.speechSynthesis?.cancel();
   render();
   save();
+  // cache preview for the newly active tab
+  captureTabPreview(tab).catch(() => {});
 }
 
 function destroyGuest(tab) {
@@ -454,6 +456,8 @@ function destroyGuest(tab) {
 function closeTab(tabId) {
   const index = state.tabs.findIndex(tab => tab.id === tabId);
   if (index < 0) return;
+  hideTabPreview();
+  invalidateTabPreview(tabId);
 
   const [tab] = state.tabs.splice(index, 1);
 
@@ -632,6 +636,9 @@ function attachWebview(tab) {
 
     if (tab.readerMode) applyReader(tab, true);
 
+    invalidateTabPreview(tab.id);
+    if (tab.id === state.activeTabId) captureTabPreview(tab).catch(() => {});
+
     updateToolbar();
     renderTabs();
   });
@@ -663,12 +670,16 @@ function attachWebview(tab) {
 
     tab.url = event.url;
 
+    invalidateTabPreview(tab.id);
+
     if (tab.paneAddress) tab.paneAddress.value = tab.url;
 
     recordHistory(tab.url, tab.title);
+    invalidateTabPreview(tab.id);
     updateToolbar();
     renderTabs();
     save();
+    if (tab.id === state.activeTabId) captureTabPreview(tab).catch(() => {});
   };
 
   view.addEventListener("did-navigate", navigated);
@@ -908,6 +919,24 @@ function renderTabs() {
         event.preventDefault();
         closeTab(tab.id);
       }
+    });
+
+    el.addEventListener("mouseenter", () => {
+      clearTimeout(tabPreviewHideTimer);
+      tabPreviewTimer = setTimeout(() => showTabPreview(tab, el), 300);
+    });
+    el.addEventListener("mouseleave", () => {
+      clearTimeout(tabPreviewTimer);
+      tabPreviewHideTimer = setTimeout(hideTabPreview, 120);
+    });
+
+    el.addEventListener("mouseenter", () => {
+      clearTimeout(tabPreviewHideTimer);
+      tabPreviewTimer = setTimeout(() => showTabPreview(tab, el), 300);
+    });
+    el.addEventListener("mouseleave", () => {
+      clearTimeout(tabPreviewTimer);
+      tabPreviewHideTimer = setTimeout(hideTabPreview, 120);
     });
 
     $("tabs").append(el);
@@ -2318,5 +2347,104 @@ if (window.browserAPI?.onCloseHelpTab) {
   });
 }
 
+/* ---------- Tab hover previews ---------- */
+
+const tabPreviewCache = new Map();
+let tabPreviewEl = null;
+let tabPreviewTimer = null;
+let tabPreviewHideTimer = null;
+
+function ensureTabPreview() {
+  if (tabPreviewEl) return tabPreviewEl;
+  tabPreviewEl = document.createElement('div');
+  tabPreviewEl.className = 'tab-preview';
+  tabPreviewEl.innerHTML = '<div class="tp-thumb"><span class="tp-placeholder">Loading preview…</span></div><div class="tp-info"><div class="tp-title"></div><div class="tp-url"></div><div class="tp-status"><span class="dot"></span><span class="tp-status-text">Ready</span></div></div>';
+  document.body.append(tabPreviewEl);
+  return tabPreviewEl;
+}
+
+async function captureTabPreview(tab, force = false) {
+  if (!force && tabPreviewCache.has(tab.id)) return tabPreviewCache.get(tab.id);
+  if (!tab || !tab.webview) return null;
+  try {
+    const img = await tab.webview.capturePage();
+    const size = img.getSize();
+    if (!size.width || !size.height) return null;
+    const dataUrl = img.toDataURL();
+    tabPreviewCache.set(tab.id, dataUrl);
+    return dataUrl;
+  } catch (e) {
+    return null;
+  }
+}
+
+function invalidateTabPreview(tabId) {
+  tabPreviewCache.delete(tabId);
+}
+
+function showTabPreview(tab, anchor) {
+  const el = ensureTabPreview();
+  const rect = anchor.getBoundingClientRect();
+  const thumb = el.querySelector('.tp-thumb');
+  const titleEl = el.querySelector('.tp-title');
+  const urlEl = el.querySelector('.tp-url');
+  const statusDot = el.querySelector('.dot');
+  const statusText = el.querySelector('.tp-status-text');
+
+  titleEl.textContent = tab.title || 'New Tab';
+  urlEl.textContent = tab.url || '';
+  statusDot.className = 'dot' + (tab.loading ? ' loading' : '') + (tab.snoozedUntil ? ' sleeping' : '');
+  statusText.textContent = tab.loading ? 'Loading…' : (tab.snoozedUntil ? 'Sleeping' : 'Ready');
+
+  // clear thumbnail immediately to avoid stale previews
+  thumb.innerHTML = '<span class="tp-placeholder">No preview</span>';
+
+  // show cached preview immediately if available
+  const cached = tabPreviewCache.get(tab.id);
+  if (cached) {
+    thumb.innerHTML = '';
+    const img = document.createElement('img');
+    img.src = cached;
+    thumb.append(img);
+    statusText.textContent = tab.loading ? 'Loading…' : (tab.snoozedUntil ? 'Sleeping' : 'Ready');
+  } else if (!tab.webview || tab.snoozedUntil) {
+    thumb.innerHTML = '<span class="tp-placeholder">No preview</span>';
+    statusText.textContent = tab.snoozedUntil ? 'Sleeping' : 'Not loaded';
+  }
+
+  let left = rect.left;
+  let top = rect.bottom + 8;
+  if (left + 260 > window.innerWidth) left = window.innerWidth - 270;
+  if (top + 200 > window.innerHeight) top = rect.top - 210;
+  el.style.left = left + 'px';
+  el.style.top = top + 'px';
+
+  el.classList.add('visible');
+
+  // capture fresh (force) and update thumbnail
+  captureTabPreview(tab, true).then(dataUrl => {
+    if (!dataUrl) {
+      if (!tabPreviewCache.has(tab.id)) {
+        thumb.innerHTML = '<span class="tp-placeholder">No preview</span>';
+      }
+      return;
+    }
+    if (titleEl.textContent !== (tab.title || 'New Tab')) return;
+    thumb.innerHTML = '';
+    const img = document.createElement('img');
+    img.src = dataUrl;
+    thumb.append(img);
+  });
+}
+
+function hideTabPreview() {
+  if (tabPreviewEl) tabPreviewEl.classList.remove('visible');
+}
+
 render();
 save();
+setInterval(() => {
+  const tab = activeTab();
+  if (tab && tab.webview) captureTabPreview(tab, true).catch(() => {});
+}, 5000);
+
