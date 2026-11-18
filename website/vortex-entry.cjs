@@ -13,7 +13,7 @@ const helpFile = path.join(__dirname, 'help', 'index.html');
 const helpURL = pathToFileURL(helpFile).href;
 
 // Online help site (replace with your deployed URL)
-const HELP_ONLINE_URL = process.env.VORTEX_HELP_URL || 'https://vortex-browser.example.com/help';
+const HELP_ONLINE_URL = process.env.VORTEX_HELP_URL || 'https://polite-bonbon-66a779.netlify.app/help';
 
 const browserFile = path.join(__dirname, '..', 'renderer', 'index.html');
 
