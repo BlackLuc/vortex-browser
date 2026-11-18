@@ -100,7 +100,41 @@ else if(page==='faq'){root.append(heading('A few things you might be wondering.'
 
 else if(page==='settings')settings(root);
 
-else if(page==='about'){root.append(heading('Vortex Browser','Your internet. Your space. Your control.'));const image=el('img','about-mark');image.src='vortex.png';image.alt='Vortex blue and violet spiral';root.append(image);root.append(el('p','','An independent browser experience, built around your browsing space. This is its local welcome center and permanent help guide.'));const meta=el('dl','metadata');[['Browser version',info?.version||'Available when opened in Vortex desktop'],['Build information',info?`Electron ${info.electron} · Chromium ${info.chrome}`:'Not provided by the web preview'],['Credits','Vortex Browser · Powered by Electron and Chromium'],['Help center','Offline-ready, local browser guide']].forEach(([k,v])=>append(meta,el('dt','',k),el('dd','',v)));root.append(meta);root.append(append(el('div','actions'),link('Troubleshooting →','troubleshooting','button'),link('Frequently asked questions →','faq','button')));}
+else if(page==='about'){root.append(heading('Vortex Browser','Your internet. Your space. Your control.'));const image=el('img','about-mark');image.src='vortex.png';image.alt='Vortex blue and violet spiral';root.append(image);root.append(el('p','','An independent browser experience, built around your browsing space. This is its local welcome center and permanent help guide.'));const meta=el('dl','metadata');[['Browser version',info?.version||'Available when opened in Vortex desktop'],['Build information',info?`Electron ${info.electron} · Chromium ${info.chrome}`:'Not provided by the web preview'],['Credits','Vortex Browser · Powered by Electron and Chromium'],['Help center','Offline-ready, local browser guide']].forEach(([k,v])=>append(meta,el('dt','',k),el('dd','',v)));root.append(meta);
+
+const downloads = el('section','page-heading');
+
+downloads.append(el('h2','','Download Vortex Browser'));
+
+downloads.append(el('p','','Get the latest build for your platform, or build from source.'));
+
+const dActions = el('div','actions');
+
+const winLink = el('a','button primary','Download for Windows');
+
+winLink.href = 'https://github.com/BlackLuc/vortex-browser/releases/latest';
+
+winLink.target = '_blank';
+
+const allLink = el('a','button','All releases');
+
+allLink.href = 'https://github.com/BlackLuc/vortex-browser/releases';
+
+allLink.target = '_blank';
+
+append(dActions, winLink, allLink);
+
+downloads.append(dActions);
+
+const pre = el('pre','');
+
+pre.textContent = 'git clone https://github.com/BlackLuc/vortex-browser.git\ncd vortex-browser\nnpm install\nnpm start';
+
+downloads.append(pre);
+
+root.append(downloads);
+
+root.append(append(el('div','actions'),link('Troubleshooting →','troubleshooting','button'),link('Frequently asked questions →','faq','button')));}
 
 }
 
