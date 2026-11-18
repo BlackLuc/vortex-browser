@@ -930,15 +930,6 @@ function renderTabs() {
       tabPreviewHideTimer = setTimeout(hideTabPreview, 120);
     });
 
-    el.addEventListener("mouseenter", () => {
-      clearTimeout(tabPreviewHideTimer);
-      tabPreviewTimer = setTimeout(() => showTabPreview(tab, el), 300);
-    });
-    el.addEventListener("mouseleave", () => {
-      clearTimeout(tabPreviewTimer);
-      tabPreviewHideTimer = setTimeout(hideTabPreview, 120);
-    });
-
     $("tabs").append(el);
   }
 }
