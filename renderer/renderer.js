@@ -2031,7 +2031,8 @@ function commands() {
     ["Zoom in", () => setZoom(0.1)],
     ["Zoom out", () => setZoom(-0.1)],
     ["Reset zoom", () => setZoom(0, true)],
-    ["Clear browsing data", clearBrowsingData]
+    ["Clear browsing data", clearBrowsingData],
+    ["Open admin panel", openAdminPanel]
   ];
 }
 
@@ -2117,6 +2118,32 @@ function runPalette(index) {
   attempt(item.run);
 }
 
+function openAdminPanel() {
+  $("admin-status").textContent = "Ready.";
+  $("admin-panel").showModal();
+}
+
+let adminReleasing = false;
+
+async function runReleaseNow() {
+  if (adminReleasing) return;
+  adminReleasing = true;
+  const releaseBtn = $("admin-release");
+  releaseBtn.disabled = true;
+  $("admin-status").textContent = "Releasing… bump + build + publish";
+  try {
+    const result = await window.browserAPI.adminReleaseNow();
+    $("admin-status").textContent = result && result.ok
+      ? `Released version ${result.version} successfully.`
+      : `Release failed: ${(result && result.error) || "unknown error"}`;
+  } catch (error) {
+    $("admin-status").textContent = "Release failed: " + ((error && error.message) || "unknown error");
+  } finally {
+    adminReleasing = false;
+    releaseBtn.disabled = false;
+  }
+}
+
 function openMenu() {
   $("menu-items").replaceChildren();
 
@@ -2164,6 +2191,7 @@ $("btn-settings").addEventListener("click", () => openPanel("settings"));
 $("btn-site").addEventListener("click", () => openPanel("privacy"));
 $("btn-commands").addEventListener("click", openPalette);
 $("btn-menu").addEventListener("click", openMenu);
+$("admin-release").addEventListener("click", runReleaseNow);
 $("sidebar-close").addEventListener("click", closePanel);
 
 $("btn-ws-new").addEventListener("click", newWorkspace);

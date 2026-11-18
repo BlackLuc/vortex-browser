@@ -173,6 +173,23 @@
     <div id="cp-results"></div>
   </dialog>
 
+  <dialog id="admin-panel">
+    <div class="dialog-heading">
+      <h2>Admin</h2>
+      <button class="icon-btn" data-close="admin-panel" aria-label="Close admin panel">×</button>
+    </div>
+
+    <p class="muted">
+      Dev panel. The release button bumps the version, builds Vortex for Windows and publishes it to GitHub automatically.
+    </p>
+
+    <div class="dialog-actions">
+      <button id="admin-release" class="btn-primary">Release current version</button>
+    </div>
+
+    <p id="admin-status" class="muted">Ready.</p>
+  </dialog>
+
   <dialog id="menu">
     <div class="dialog-heading">
       <h2>Vortex</h2>

@@ -91,6 +91,32 @@ app.whenReady().then(() => {
     } catch (e) { console.error('[Vortex] Auto-updater init failed:', e && e.message); }
   }, 1500);
 
+  ipcMain.handle('vortex-admin:release-current', async () => {
+    const projectDir = path.join(__dirname, '..');
+    const pkgPath = path.join(projectDir, 'package.json');
+    const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+    const parts = String(pkg.version || '0.0.0').split('.').map(Number);
+    while (parts.length < 3) parts.push(0);
+    parts[2] = (parts[2] || 0) + 1;
+    const newVersion = parts.join('.');
+    pkg.version = newVersion;
+    fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n');
+
+    const { spawn } = require('child_process');
+    const build = await new Promise(resolve => {
+      const child = spawn('npx', ['electron-builder', '--win', '--x64', '--publish', 'always'], {
+        cwd: projectDir,
+        shell: true,
+        stdio: 'inherit',
+        env: Object.assign({}, process.env, { GITHUB_TOKEN: process.env.GITHUB_TOKEN || process.env.GH_TOKEN || '' })
+      });
+      child.on('close', code => resolve({ code }));
+    });
+
+    if (build.code !== 0) throw new Error('Release build failed with exit code ' + build.code + '.');
+    return { ok: true, version: newVersion, at: new Date().toISOString() };
+  });
+
   ipcMain.handle('vortex-help:open', (event, mode) => {
     if (!trustedBrowser(event)) throw new Error('Untrusted sender');
     mainWindow?.webContents.send('open-help-tab', helpTabUrl(mode === 'tutorial' ? 'tutorial' : 'help'));
