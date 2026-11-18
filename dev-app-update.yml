@@ -1,0 +1,4 @@
+owner: BlackLuc
+repo: vortex-browser
+provider: github
+updaterCacheDirName: vortex-browser-updater
