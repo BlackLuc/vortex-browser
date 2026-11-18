@@ -42,7 +42,9 @@ const DEFAULT_SETTINGS = {
   showBookmarksBar: true,
   restoreSession: true,
   defaultZoom: 1,
-  downloadDirectory: ""
+  downloadDirectory: "",
+  autoSleep: true,
+  autoSleepMinutes: 10
 };
 
 const SEARCH_ENGINES = {
@@ -243,7 +245,8 @@ function serializableTab(tab) {
     pinned: tab.pinned,
     muted: tab.muted,
     zoom: tab.zoom,
-    snoozedUntil: tab.snoozedUntil
+    snoozedUntil: tab.snoozedUntil,
+    lastActiveAt: tab.lastActiveAt || 0
   };
 }
 
@@ -314,7 +317,12 @@ function load() {
       defaultZoom: Number.isFinite(settings.defaultZoom)
         ? Math.max(0.5, Math.min(3, settings.defaultZoom)) : 1,
       downloadDirectory: typeof settings.downloadDirectory === "string"
-        ? settings.downloadDirectory : ""
+        ? settings.downloadDirectory : "",
+      autoSleep: settings.autoSleep !== false,
+      autoSleepMinutes: Number.isFinite(Number(settings.autoSleepMinutes))
+        && Number(settings.autoSleepMinutes) > 0
+        ? Math.min(240, Math.max(1, Number(settings.autoSleepMinutes)))
+        : DEFAULT_SETTINGS.autoSleepMinutes
     };
 
     state.bookmarks = loadEntries(saved.bookmarks);
@@ -361,6 +369,11 @@ function load() {
           savedTab.snoozedUntil > Date.now()
           ? savedTab.snoozedUntil : 0;
 
+        tab.lastActiveAt = Number.isFinite(savedTab.lastActiveAt) &&
+          savedTab.lastActiveAt > 0
+          ? savedTab.lastActiveAt
+          : 0;
+
         if (typeof savedTab.title === "string" && savedTab.title.trim()) {
           tab.title = savedTab.title.slice(0, 300);
         }
@@ -394,6 +407,7 @@ function makeTab(url = "") {
     muted: false,
     loading: false,
     snoozedUntil: 0,
+    lastActiveAt: 0,
     readerMode: false,
     zoom: state.settings.defaultZoom,
     pane: null,
@@ -428,6 +442,7 @@ function switchTab(tabId) {
   const tab = state.tabs.find(item => item.id === tabId);
   if (!tab) return;
 
+  tab.lastActiveAt = Date.now();
   state.activeWorkspace = tab.workspace;
   state.activeTabId = tab.id;
   tab.snoozedUntil = 0;
@@ -535,6 +550,35 @@ function wakeDueTabs() {
     render();
     save();
     toast("A snoozed tab is ready.");
+  }
+}
+
+function autoSleepIdleTabs() {
+  if (!state.settings.autoSleep) return;
+
+  const idleMs = Math.max(
+    60,
+    (Number(state.settings.autoSleepMinutes) || DEFAULT_SETTINGS.autoSleepMinutes) * 60 * 1000
+  );
+  const now = Date.now();
+  let slept = false;
+
+  for (const tab of state.tabs) {
+    if (tab.snoozedUntil) continue;
+    if (tab.id === state.activeTabId) continue;
+    if (state.splitTabId === tab.id) continue;
+    if (tab.pinned) continue;
+    if (!tab.lastActiveAt) continue;
+    if (now - tab.lastActiveAt < idleMs) continue;
+
+    tab.snoozedUntil = now + idleMs;
+    destroyGuest(tab);
+    slept = true;
+  }
+
+  if (slept) {
+    render();
+    save();
   }
 }
 
@@ -1479,6 +1523,22 @@ function renderSettings(body) {
       }
     ), true),
 
+    node("h3", "panel-section", "Tab sleeping"),
+
+    settingRow("Auto sleep inactive tabs", checkbox(
+      state.settings.autoSleep,
+      value => updateSetting("autoSleep", value)
+    )),
+
+    settingRow("Sleep after idle", selectControl(
+      [1, 5, 10, 30, 60].map(minutes => [
+        String(minutes),
+        `${minutes} min`
+      ]),
+      String(state.settings.autoSleepMinutes),
+      value => updateSetting("autoSleepMinutes", Number(value))
+    )),
+
     node("h3", "panel-section", "Downloads"),
 
     settingRow("Download folder", textInput(
@@ -1929,6 +1989,7 @@ function commands() {
     ["New workspace", newWorkspace],
     ["Toggle split view", toggleSplit],
     ["Toggle reader mode", toggleReader],
+    ["Toggle auto tab sleep", () => updateSetting("autoSleep", !state.settings.autoSleep)],
     ["Open privacy dashboard", () => {
       state.currentPanel = "privacy";
       $("sidebar").classList.remove("hidden");
@@ -2321,7 +2382,7 @@ window.addEventListener("beforeunload", () => {
   }
 });
 
-setInterval(wakeDueTabs, 1000);
+setInterval(() => { wakeDueTabs(); autoSleepIdleTabs(); }, 1000);
 
 load();
 applyTheme();
