@@ -2219,6 +2219,23 @@ async function runReleaseNow() {
   }
 }
 
+async function runVersionCheck() {
+  const versionInput = $("admin-version-input");
+  const version = String(versionInput && versionInput.value ? versionInput.value : "").trim();
+  const resultEl = $("admin-version-result");
+
+  if (resultEl) resultEl.textContent = "Checking…";
+
+  try {
+    const info = await attempt(() => window.browserAPI.getVersionInfo({ version }));
+    const tag = info && info.tag ? info.tag : null;
+
+    if (resultEl) resultEl.textContent = tag ? `Last version: ${tag}` : "No version found.";
+  } catch (error) {
+    if (resultEl) resultEl.textContent = "Version check failed.";
+  }
+}
+
 function openMenu() {
   $("menu-items").replaceChildren();
 
@@ -2267,6 +2284,7 @@ $("btn-site").addEventListener("click", () => openPanel("privacy"));
 $("btn-commands").addEventListener("click", openPalette);
 $("btn-menu").addEventListener("click", openMenu);
 $("admin-release").addEventListener("click", runReleaseNow);
+$("admin-version-check").addEventListener("click", () => runVersionCheck());
 $("sidebar-close").addEventListener("click", closePanel);
 
 $("btn-ws-new").addEventListener("click", newWorkspace);

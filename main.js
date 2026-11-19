@@ -10,6 +10,7 @@ const {
 const path = require('path');
 const os = require('os');
 const fs = require('fs');
+const https = require('https');
 
 let mainWindow = null;
 let isQuitting = false;
@@ -704,6 +705,45 @@ function registerIPC() {
     });
 
     return true;
+  });
+
+  // Version check
+
+  ipcMain.handle('vortex:version-check', async (event, payload) => {
+    if (!isTrustedSender(event)) return { tag: null, name: null, publishedAt: null };
+
+    const version = payload && typeof payload === 'object' && typeof payload.version === 'string'
+      ? payload.version.trim()
+      : '';
+
+    const repo = 'BlackLuc/vortex-browser';
+    const suffix = version
+      ? `/releases/tags/${encodeURIComponent(version)}`
+      : '/releases/latest';
+    const url = `https://api.github.com/repos/${repo}${suffix}`;
+
+    const data = await new Promise((resolve, reject) => {
+      const request = https.get(url, {
+        headers: {
+          'User-Agent': 'VortexBrowser',
+          ...(process.env.GITHUB_TOKEN ? { Authorization: `Bearer ${process.env.GITHUB_TOKEN}` } : {})
+        }
+      }, response => {
+        let body = '';
+        response.on('data', chunk => { body += chunk; });
+        response.on('end', () => {
+          try { resolve(JSON.parse(body)); } catch (error) { reject(error); }
+        });
+      });
+
+      request.on('error', reject);
+    });
+
+    if (!data || !data.tag_name) {
+      return { tag: null, name: null, publishedAt: null };
+    }
+
+    return { tag: data.tag_name, name: data.name, publishedAt: data.published_at };
   });
 }
 

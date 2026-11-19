@@ -47,7 +47,8 @@ const vortexApi = {
   // Admin
   adminReleaseNow: () => ipcRenderer.invoke('vortex-admin:release-current'),
   isDev: () => ipcRenderer.invoke('vortex-admin:is-dev'),
-  onReleaseLog: (cb) => ipcRenderer.on('vortex-admin:log', (_e, line) => cb(line))
+  onReleaseLog: (cb) => ipcRenderer.on('vortex-admin:log', (_e, line) => cb(line)),
+  getVersionInfo: (version) => ipcRenderer.invoke('vortex:version-check', { version })
 };
 
 contextBridge.exposeInMainWorld('browserAPI', vortexApi);
