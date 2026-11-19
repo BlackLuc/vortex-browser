@@ -48,7 +48,9 @@ const vortexApi = {
   adminReleaseNow: () => ipcRenderer.invoke('vortex-admin:release-current'),
   isDev: () => ipcRenderer.invoke('vortex-admin:is-dev'),
   onReleaseLog: (cb) => ipcRenderer.on('vortex-admin:log', (_e, line) => cb(line)),
-  getVersionInfo: (version) => ipcRenderer.invoke('vortex:version-check', { version })
+  getVersionInfo: (version) => ipcRenderer.invoke('vortex:version-check', { version }),
+  setGithubToken: (token) => ipcRenderer.invoke('vortex:set-github-token', token),
+  getGithubTokenStatus: () => ipcRenderer.invoke('vortex:get-github-token-status')
 };
 
 contextBridge.exposeInMainWorld('browserAPI', vortexApi);

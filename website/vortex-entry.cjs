@@ -41,6 +41,23 @@ function complete() { const file = statusFile(); fs.mkdirSync(path.dirname(file)
 
 function trustedBrowser(event) { const w = BrowserWindow.fromWebContents(event.sender); return Boolean(w && !w.isDestroyed() && event.sender === w.webContents && event.senderFrame === w.webContents.mainFrame && event.senderFrame.url.split('?')[0] === browserURL); }
 
+function githubTokenFile() { return path.join(app.getPath('userData'), 'vortex-github-token.json'); }
+
+function loadStoredGithubToken() {
+  try {
+    const data = JSON.parse(fs.readFileSync(githubTokenFile(), 'utf8'));
+    return typeof data?.token === 'string' ? data.token : '';
+  } catch { return ''; }
+}
+
+function saveStoredGithubToken(token) {
+  try {
+    fs.mkdirSync(path.dirname(githubTokenFile()), { recursive: true });
+    fs.writeFileSync(githubTokenFile(), JSON.stringify({ token, savedAt: new Date().toISOString() }));
+    return true;
+  } catch { return false; }
+}
+
 const originalLoadFile = BrowserWindow.prototype.loadFile;
 
 BrowserWindow.prototype.loadFile = function(file, options) {
@@ -103,12 +120,13 @@ app.whenReady().then(() => {
     fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n');
 
     const { spawn } = require('child_process');
+    const token = process.env.GITHUB_TOKEN || process.env.GH_TOKEN || loadStoredGithubToken();
     const build = await new Promise(resolve => {
       const child = spawn('npx', ['electron-builder', '--win', '--x64', '--publish', 'always'], {
         cwd: projectDir,
         shell: true,
         stdio: ['ignore', 'pipe', 'pipe'],
-        env: Object.assign({}, process.env, { GITHUB_TOKEN: process.env.GITHUB_TOKEN || process.env.GH_TOKEN || '' })
+        env: Object.assign({}, process.env, { GITHUB_TOKEN: token })
       });
       let log = '';
       child.stdout.on('data', d => {
@@ -130,6 +148,17 @@ app.whenReady().then(() => {
   });
 
   ipcMain.handle('vortex-admin:is-dev', () => ({ dev: !app.isPackaged }));
+
+  ipcMain.handle('vortex:get-github-token-status', async (event) => {
+    if (!trustedBrowser(event)) return { stored: false };
+    return { stored: Boolean(loadStoredGithubToken()) };
+  });
+
+  ipcMain.handle('vortex:set-github-token', async (event, token) => {
+    if (!trustedBrowser(event)) return false;
+    if (typeof token !== 'string' || !token.trim()) return false;
+    return saveStoredGithubToken(token.trim());
+  });
 
   ipcMain.handle('vortex-help:open', (event, mode) => {
     if (!trustedBrowser(event)) throw new Error('Untrusted sender');

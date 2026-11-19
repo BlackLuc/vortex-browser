@@ -2236,6 +2236,24 @@ async function runVersionCheck() {
   }
 }
 
+async function saveGithubToken() {
+  const input = $("admin-github-token");
+  const token = String(input && input.value ? input.value : "").trim();
+  const statusEl = $("admin-token-status");
+
+  if (!token) {
+    if (statusEl) statusEl.textContent = "Enter a token first.";
+    return;
+  }
+
+  try {
+    const ok = await window.browserAPI.setGithubToken(token);
+    if (statusEl) statusEl.textContent = ok ? "GitHub token saved." : "Failed to save token.";
+  } catch (error) {
+    if (statusEl) statusEl.textContent = "Failed to save token.";
+  }
+}
+
 function openMenu() {
   $("menu-items").replaceChildren();
 
@@ -2285,6 +2303,7 @@ $("btn-commands").addEventListener("click", openPalette);
 $("btn-menu").addEventListener("click", openMenu);
 $("admin-release").addEventListener("click", runReleaseNow);
 $("admin-version-check").addEventListener("click", () => runVersionCheck());
+$("admin-github-token-save").addEventListener("click", saveGithubToken);
 $("sidebar-close").addEventListener("click", closePanel);
 
 $("btn-ws-new").addEventListener("click", newWorkspace);
